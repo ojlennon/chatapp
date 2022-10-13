@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup  } from 'firebase/auth';
-import { getDocs, getFirestore, query, limit, collection, orderBy, addDoc, onSnapshot, serverTimestamp,setDoc,doc, DocumentSnapshot, getDoc} from 'firebase/firestore';
+import { getDocs, getFirestore, query, limit, collection, orderBy, addDoc, onSnapshot, serverTimestamp, setDoc, doc, DocumentSnapshot, getDoc, snapshot, options} from 'firebase/firestore';
 import root from './index'
 
 // import { getAuth } from 'react-firebase-hooks/auth';
@@ -42,6 +42,22 @@ class Message {
     this.photoURL = photoURL;
   }
 }
+
+const messageConverter = {
+  toFirestore: (message) => {
+    return {
+      id: message.uid,
+      createdAt: message.createdAt,
+      text: message.text,
+      photoURL: message.photoURL
+    }
+  },
+  fromFirestore: (snapshot) => {
+    const data = snapshot.data();
+    return new Message(data.text, data.id, data.createdAt, data.photoURL)
+  }
+};
+
 
 
 function App(props) {
@@ -85,42 +101,25 @@ function SignOut() {
 }
 
 
+
 function ChatRoom() {
   const dummy = useRef();
   const messagesRef = collection(firestore, "messages");
   const qer = query(messagesRef, orderBy("createdAt"), limit(25));
-  const messages = [getDoc(doc(firestore,"messages",""))]
-  const retriveData = async (e) => {
-    const snapQ = await getDocs(qer);
-    snapQ.forEach((doc) => {
-      let tempReply = doc.data()
-      // console.log(tempReply.text)
-      // tempReply.id = doc.id;
-      // console.log(doc.id)
-      // messages.push(tempReply)
-      // console.log(doc.id, " => ", doc.data());
-    })
-  }
-  retriveData();
-  console.log(messages);
-
-
-
-
   const [formValue, setFormValue] = useState('');
-
 
   const sendMessage = async (e) => {
     e.preventDefault();
 
     const { uid, photoURL } = auth.currentUser;
 
-    const docRef = await addDoc(messagesRef, {
+     await addDoc(messagesRef, {
       text: formValue,
       createdAt: serverTimestamp(),
       uid,
       photoURL
     });
+    
     console.log(formValue)
 
     setFormValue('');
@@ -128,12 +127,49 @@ function ChatRoom() {
     root.render(<App user={auth.currentUser} />)
   }
 
+  // const retriveData = async () => {
+  //   const teemp = []
+  //   const snapQ = await getDocs(qer);
+  //   getDocs(qer).then((doc) => {
+
+  //    }
+      
+  //   snapQ.forEach((doc) => {
+  //     let tempReply = doc.data();
+  //     tempReply.id = doc.id;
+  //     teemp.push(tempReply);
+  //   })
+  //   return teemp
+  // }
+  let messages = [];
+  getDocs(qer).then((snapshot) => {
+    snapshot.forEach((doc) => {
+      let tempReply = doc.data();
+      tempReply.id = doc.id;
+      messages.push(tempReply);
+    })
+  });
+  console.log(messages)
+
+  // const p = Promise.resolve(retriveData())
+  // p.then((v) => {
+  //   console.log(v)
+  // })
+  const { uid, photoURL } = auth.currentUser;
+  const docRef = addDoc(messagesRef, {
+    text: formValue,
+    createdAt: serverTimestamp(),
+    uid,
+
+  })
+
+
   return (<>
+    <main>
     {messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
-    {/* {thinga.forEach(msg => <ChatMessage key={msg.id} message={msg} />)} */}
+    </main>
 
-      <span ref={dummy}></span>
-
+    <span ref={dummy}></span>
 
     <form onSubmit={sendMessage}>
 
@@ -143,6 +179,10 @@ function ChatRoom() {
 
     </form>
   </>);
+}
+
+function chats() {
+  
 }
 
 
