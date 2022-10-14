@@ -34,38 +34,13 @@ onAuthStateChanged(auth, (user) => {
     
 })
 
-class Message {
-  constructor(text, uid, createdAt, photoURL) {
-    this.text = text;
-    this.uid = uid;
-    this.createdAt = createdAt;
-    this.photoURL = photoURL;
-  }
-}
-
-const messageConverter = {
-  toFirestore: (message) => {
-    return {
-      id: message.uid,
-      createdAt: message.createdAt,
-      text: message.text,
-      photoURL: message.photoURL
-    }
-  },
-  fromFirestore: (snapshot) => {
-    const data = snapshot.data();
-    return new Message(data.text, data.id, data.createdAt, data.photoURL)
-  }
-};
-
-
 
 function App(props) {
   const user = props.user;
   return (
     <div className="App">
       <header>
-        <h1>⚛️🔥💬</h1>
+        <h1>Chat App</h1>
         <SignOut />
       </header>
 
@@ -109,9 +84,6 @@ function ChatRoom() {
   const [formValue, setFormValue] = useState("");
   const [messages, setMessages] = useState([]);
 
-  
-
-
   const sendMessage = async (e) => {
     e.preventDefault();
 
@@ -123,12 +95,10 @@ function ChatRoom() {
       uid,
       photoURL
     });
-    
-    console.log(formValue)
 
     setFormValue('');
     dummy.current.scrollIntoView({ behavior: 'smooth' });
-    root.render(<App user={auth.currentUser} />)
+    // root.render(<App user={auth.currentUser} />)
   }
 
   const retriveData = async () => {
@@ -143,7 +113,6 @@ function ChatRoom() {
     return teemp
   }
   retriveData().then(messages => setMessages(messages));
-  console.log(messages)
 
   // const p = Promise.resolve(retriveData())
   // p.then((v) => {
@@ -154,7 +123,7 @@ function ChatRoom() {
 
   return (<>
     <main>
-    {messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
+    {messages.length != 0 && messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
     </main>
 
     <span ref={dummy}></span>
@@ -169,22 +138,16 @@ function ChatRoom() {
   </>);
 }
 
-function chats() {
-  
-}
-
 
 function ChatMessage(props) {
-  console.log("Here")
-  const { text, uid, photoURL } = props.message.data();
-  console.log(props.key);
+  const { text, uid, photoURL } = props.message;
 
   const messageClass = uid === auth.currentUser.uid ? 'sent' : 'received';
-  console.log(messageClass);
 
   return (<>
-    <div className={`${messageClass}`}>
+    <div className={`message ${messageClass}`}>
       <img src={photoURL || 'https://api.adorable.io/avatars/23/abott@adorable.png'} />
+      {/* <img src='https://images.unsplash.com/flagged/photo-1566127992631-137a642a90f4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8Mnx8fGVufDB8fHx8&w=1000&q=80'/> */}
       <p>{text}</p>
     </div>
   </>)
@@ -192,27 +155,3 @@ function ChatMessage(props) {
 
 
 export default App;
-
-
-
-
-
-
-
-
-
-//   const unsubscribe = onSnapshot(qer, (querySnapshot) => {
-//     querySnapshot.forEach((doc) => {
-//       messages.push(doc.data);
-//     })
-//   console.log(messages)
-
-// })
-  
-  
-  // const querSnapshot = getDocs(qer);
-  // querSnapshot.forEach((doc) => messages.push(doc.data()))
-  // console.log(messages);
-  
-  // const query = messagesRef.orderBy('createdAt').limit(25);
-  // const [messages] = useCollectionData(query, { idField: 'id' });
