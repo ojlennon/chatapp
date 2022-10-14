@@ -106,7 +106,11 @@ function ChatRoom() {
   const dummy = useRef();
   const messagesRef = collection(firestore, "messages");
   const qer = query(messagesRef, orderBy("createdAt"), limit(25));
-  const [formValue, setFormValue] = useState('');
+  const [formValue, setFormValue] = useState("");
+  const [messages, setMessages] = useState([]);
+
+  
+
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -127,28 +131,18 @@ function ChatRoom() {
     root.render(<App user={auth.currentUser} />)
   }
 
-  // const retriveData = async () => {
-  //   const teemp = []
-  //   const snapQ = await getDocs(qer);
-  //   getDocs(qer).then((doc) => {
-
-  //    }
+  const retriveData = async () => {
+    const teemp = []
+    const snapQ = await getDocs(qer);
       
-  //   snapQ.forEach((doc) => {
-  //     let tempReply = doc.data();
-  //     tempReply.id = doc.id;
-  //     teemp.push(tempReply);
-  //   })
-  //   return teemp
-  // }
-  let messages = [];
-  getDocs(qer).then((snapshot) => {
-    snapshot.forEach((doc) => {
+    snapQ.forEach((doc) => {
       let tempReply = doc.data();
       tempReply.id = doc.id;
-      messages.push(tempReply);
+      teemp.push(tempReply);
     })
-  });
+    return teemp
+  }
+  retriveData().then(messages => setMessages(messages));
   console.log(messages)
 
   // const p = Promise.resolve(retriveData())
@@ -156,12 +150,6 @@ function ChatRoom() {
   //   console.log(v)
   // })
   const { uid, photoURL } = auth.currentUser;
-  const docRef = addDoc(messagesRef, {
-    text: formValue,
-    createdAt: serverTimestamp(),
-    uid,
-
-  })
 
 
   return (<>
